@@ -52,7 +52,7 @@ with mlflow.start_run(run_name="<descriptive_name>"):
     # Log artifacts
     mlflow.log_artifact("models/<name>/model.pkl")
     mlflow.log_artifact("reports/model_card_<name>.md")
-    mlflow.set_tags({"domain": "fintech", "status": "candidate"})
+    mlflow.set_tags({"domain": "forex", "pair": "EURUSD", "timeframe": "M5", "status": "candidate"})
 ```
 
 ### Comparing runs
@@ -75,19 +75,14 @@ client = mlflow.tracking.MlflowClient()
 client.transition_model_version_stage(name, version, "Staging")
 ```
 
-## Domain-specific metrics to track
+## Domain-specific metrics to track (Forex)
 
-**Fintech / Trading:**
-- `val_sharpe`, `test_sharpe` — minimum 1.0 to consider for staging
+- `val_sharpe`, `test_sharpe` — minimum 1.0 to consider for staging (after spread)
 - `val_ic`, `val_icir` — IC > 0.05, ICIR > 0.4 as thresholds
-- `max_drawdown`, `calmar_ratio`
-- `feature_count`, `train_period`, `test_period`
-
-**Cheminformatics:**
-- `val_roc_auc`, `test_roc_auc` — minimum 0.7 for actives prediction
-- `val_bedroc`, `ef_1pct`, `ef_5pct` — enrichment factors
-- `scaffold_split_test_auc` — always report separately from random split
-- `n_train`, `n_test`, `positive_rate`
+- `hit_rate`, `profit_factor`, `expectancy_pips`
+- `max_drawdown`, `calmar_ratio`, `avg_trade_duration`
+- `feature_count`, `train_period`, `test_period`, `pair`, `timeframe`
+- `spread_cost_bps`, `slippage_assumption_pips` — record cost assumptions explicitly
 
 ## After logging: always do these
 
@@ -100,13 +95,13 @@ client.transition_model_version_stage(name, version, "Staging")
 
 ## Experiment naming convention
 ```
-<domain>/<target>/<model_family>/<date>
-# e.g.: trading/equity_alpha/xgboost/2025-05
-#       chem/hERG_inhibition/mpnn/2025-05
+forex/<pair>_<timeframe>/<target>/<model_family>/<date>
+# e.g.: forex/EURUSD_M5/direction/xgboost/2026-05
+#       forex/GBPJPY_H1/return/lgbm/2026-05
 ```
 
 ## GitHub integration
-When a run reaches `val_sharpe > 1.5` (trading) or `val_roc_auc > 0.80` (cheminformatics):
+When a run reaches `val_sharpe > 1.5` and `val_ic > 0.05`:
 - Create a GitHub issue titled "Candidate model: <name> — <key metric>"
-- Include: metrics table, feature importance top-10, next steps
-- Label: `experiment`, `candidate`
+- Include: metrics table (with cost assumptions), feature importance top-10, next steps
+- Label: `experiment`, `candidate`, `forex`

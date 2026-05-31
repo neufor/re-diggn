@@ -30,13 +30,15 @@ When invoked, review the files specified (or all changed files if none given):
 
 ## Critical ML checks (always run)
 
-### 1. Look-ahead bias (fintech)
+### 1. Look-ahead bias (forex)
 Scan for any feature that uses information not available at prediction time:
 - Rolling windows that include the current bar's close in a "previous" feature
-- `shift(0)` instead of `shift(1)` on price/volume data
+- `shift(0)` instead of `shift(1)` on price/spread data
 - Target variable computed before the feature cutoff date
 - `fillna` with future values (forward-fill on raw prices is OK; on returns is not)
 - Timestamp alignment: ensure features use `t-1` data to predict `t`
+- Session-open/close features computed using the next session's data
+- Weekend-gap-spanning rolling features without explicit handling
 
 ```python
 # RED FLAG patterns to grep for:
@@ -59,10 +61,10 @@ scaler = StandardScaler().fit(X_train)
 ```
 
 ### 3. Cross-validation strategy
-- **Fintech**: any use of `KFold`, `StratifiedKFold`, or `cross_val_score` without `TimeSeriesSplit` → block
-- **Cheminformatics**: any random split without scaffold split → block
-- Missing purge/embargo gap between train and test folds
+- Any use of `KFold`, `StratifiedKFold`, or `cross_val_score` without `TimeSeriesSplit` on FX time-series → block
+- Missing purge/embargo gap between train and test folds (embargo ≥ prediction horizon)
 - Walk-forward with insufficient folds (< 3)
+- Train/test split that crosses a weekend gap without explicit handling
 
 ### 4. Reproducibility
 - Missing `random_state=42` on any stochastic operation: `train_test_split`, model constructors, `KFold`, `np.random`, `torch.manual_seed`, data augmentation
@@ -74,11 +76,13 @@ scaler = StandardScaler().fit(X_train)
 - `ColumnTransformer` with remainder='passthrough' accidentally including the target
 - Incorrect `feature_names_in_` handling after sklearn 1.0+
 
-### 6. Cheminformatics-specific
-- SMILES not standardized before featurization (check for `standardize_smiles` call upstream)
-- Morgan fingerprint parameters inconsistent between training and inference (radius, nBits)
-- Activity cliff pairs not considered in train/test split
-- PAINS filter not applied before QSAR modeling
+### 6. Forex-specific
+- Backtests / labels using mid-price instead of bid (sell) / ask (buy)
+- Return labels that don't net out spread, commission, or swap
+- Position P&L computed without pip-value conversion (especially for JPY pairs, 2-decimal pip)
+- Execution assumed on the signal-generating bar's close instead of next-bar open
+- No swap/rollover applied to positions held past 22:00 UTC (3× on Wednesdays for most pairs)
+- Timestamps not normalised to UTC, or DST handling silently changing session boundaries
 
 ## Code quality checks (always run)
 

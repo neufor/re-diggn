@@ -67,7 +67,7 @@ Create or overwrite `ONBOARDING.md` at the project root. This file must be usefu
 <2-3 sentences: domain, goal, what the model/analysis produces>
 
 ## Domain
-<fintech/trading OR cheminformatics — specific target (e.g. "equity alpha signal", "ADMET prediction")>
+Forex trading — specific target (e.g. "EURUSD M5 direction", "GBPJPY H1 return forecast")
 
 ## Quick start
 <minimal steps to run the project: env setup, data, entry point command>
@@ -85,8 +85,9 @@ Create or overwrite `ONBOARDING.md` at the project root. This file must be usefu
 |-------|---------|
 | data-analyst | ... |
 | ml-trainer | ... |
-| backtesting-quant | ... (fintech only) |
-| molecule-analyst | ... (cheminformatics only) |
+| backtesting-quant | ... |
+| experiment-tracker | ... |
+| code-reviewer | ... |
 | docs | Re-generate this file |
 
 ## MCP servers
@@ -108,7 +109,7 @@ Create or overwrite `ONBOARDING.md` at the project root. This file must be usefu
 
 ### Step 4 — Update CLAUDE.md
 Read the current `CLAUDE.md`. Update only sections that have been filled in by the codebase:
-- Set the domain line (fintech vs cheminformatics, and specific target)
+- Set the domain line (specific forex target: pair, timeframe, prediction target)
 - Add an **Architecture** section if `src/` has meaningful content
 - Add entry points and key module paths
 - Do NOT remove or overwrite the Critical Rules or Conventions sections

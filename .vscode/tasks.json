@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Jupyter Lab",
+      "type": "shell",
+      "command": "jupyter lab --no-browser --port=8888 --NotebookApp.token='123456'",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Jupyter Server",
+          "endsPattern": "http://localhost:8888"
+        }
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "close": false
+      }
+    }
+  ]
+}

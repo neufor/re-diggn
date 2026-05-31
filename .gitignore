@@ -1,0 +1,53 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.uv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/exploration/
+
+# Data & models (tracked by DVC)
+data/raw/
+data/processed/
+data/docking/
+models/
+*.pkl
+*.joblib
+*.ckpt
+*.pt
+*.h5
+
+# DVC
+/tmp
+
+# Reports outputs (keep .md, ignore generated HTML/PNG if preferred)
+reports/figures/
+reports/*.html
+
+# Serena runtime (memories are session-specific; project.yml is tracked)
+.serena/memories/
+.serena/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+
+# Optuna
+reports/*.db

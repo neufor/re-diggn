@@ -19,21 +19,36 @@ Example: "Use the data-analyst agent to profile `data/raw/eurusd_m5.parquet`"
 ## Project structure
 ```
 data/
-  raw/          # source FX data (tick, OHLCV bars), never modified
-  processed/    # cleaned, resampled, feature-engineered
+  raw/          # source FX data (MT5 CSV exports), never modified
+  processed/    # cleaned parquet files (eurusd_m1.parquet)
 models/
-  <name>/
+  session_baseline/   # SL/TP optimisation results (Optuna)
+    metrics.json
+    optuna_trials.csv
+    breakdown_by_hour.csv
+    breakdown_by_dow.csv
+  <name>/             # future models follow the same layout
     config.yaml
     model.pkl or model.ckpt
     metrics.json
 notebooks/
   exploration/  # scratch EDA notebooks (not version-controlled)
   reports/      # clean, reproducible notebooks
+scripts/
+  clean_eurusd_m1.py  # MT5 CSV → parquet preprocessing script
 src/
-  features/     # feature engineering (technicals, microstructure, sessions)
-  models/       # model definitions
-  pipelines/    # end-to-end pipelines
-  utils/        # shared utilities
+  features/           # feature engineering package (production)
+    __init__.py       # re-exports: generate_indicators, generate_situational_features,
+                      #             create_target_delta, create_target_stat
+    indicators.py     # generate_indicators() — SMAs, MinMax, Stochastic, session-time OHE
+    situational.py    # generate_situational_features() — vol, ATR, BB, RSI, MACD, ADX (situ_ prefix)
+    targets.py        # create_target_delta(), create_target_stat() — forward-look targets + stat lookbacks
+  pipelines/          # end-to-end runnable scripts
+    session_baseline.py  # fixed SL/TP optimisation via Optuna on EURUSD M1 21:00 UTC session
+  models/             # model definitions (not yet implemented)
+  utils/              # shared utilities (not yet implemented)
+  draft/              # prototype/scratch code (not imported elsewhere)
+    _preprocessing.py # origin draft from which src/features/ was derived
 reports/
   figures/
   eda_*.md

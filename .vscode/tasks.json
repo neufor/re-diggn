@@ -4,7 +4,7 @@
     {
       "label": "Start Jupyter Lab",
       "type": "shell",
-      "command": "jupyter lab --no-browser --port=8888 --NotebookApp.token='123456'",
+      "command": ".venv\\Scripts\\jupyter.exe lab --no-browser --port=8888 --IdentityProvider.token=123456",
       "isBackground": true,
       "problemMatcher": {
         "pattern": {
@@ -12,8 +12,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Jupyter Server",
-          "endsPattern": "http://localhost:8888"
+          "beginsPattern": "ServerApp",
+          "endsPattern": "localhost:8888"
         }
       },
       "runOptions": {

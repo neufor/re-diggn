@@ -66,7 +66,14 @@
       "WebFetch(domain:www.ecb.europa.eu)",
       "PowerShell(git checkout HEAD -- data/processed/eurusd_m1.parquet)",
       "PowerShell(uv run python scripts/clean_eurusd_m1.py)",
-      "PowerShell(cd c:\\\\Projects\\\\My\\\\Re-Diggn; $env:PYTHONPATH=\".\"; uv run python src/pipelines/compute_oracle_targets.py)"
+      "PowerShell(cd c:\\\\Projects\\\\My\\\\Re-Diggn; $env:PYTHONPATH=\".\"; uv run python src/pipelines/compute_oracle_targets.py)",
+      "mcp__duckdb__execute_query",
+      "mcp__duckdb__list_columns",
+      "WebFetch(domain:www.forexfactory.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch"
     ],
     "deny": [
       "Bash(git push --force*)",

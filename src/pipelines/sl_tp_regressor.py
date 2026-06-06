@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 import pickle
 from pathlib import Path
+from typing import Literal
 
 import lightgbm as lgb
 import numpy as np
@@ -38,11 +39,9 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 from tqdm.auto import tqdm
 
-from typing import Literal
-
 from src.features import generate_indicators, generate_situational_features
 
-FeatureSet = Literal["situational", "indicators"]
+FeatureSet = Literal["situational", "indicators", "fundamental", "all"]
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
@@ -402,6 +401,14 @@ def load_or_compute_oracle_targets(df_full: pd.DataFrame) -> pd.DataFrame:
 # Columns that exist in the raw dataframe and must never be used as features.
 _RAW_COLS = {"open", "high", "low", "close", "spread", "volume",
              "tick_volume", "real_volume", "datetime", "session_start_date"}
+_RAW_COLS = _RAW_COLS | {f"target_opt_tp_buy_sl_{i}" for i in range(5, 55, 5)}
+_RAW_COLS = _RAW_COLS | {f"target_swap_buy_sl_{i}" for i in range(5, 55, 5)}
+_RAW_COLS = _RAW_COLS | {f"target_opt_tp_sell_sl_{i}" for i in range(5, 55, 5)}
+_RAW_COLS = _RAW_COLS | {f"target_swap_sell_sl_{i}" for i in range(5, 55, 5)}
+# Pre-computed fundamental features — not raw data, but already selected
+_RAW_COLS = _RAW_COLS | {"swap_long", "swap_short",
+                         "fund_rate_diff", "fund_rate_diff_change",
+                         "fund_carry_rank", "fund_rate_diff_time_since"}
 
 
 def _entry_scalars(df: pd.DataFrame, entry_pos: np.ndarray, spread_pip: np.ndarray) -> pd.DataFrame:
@@ -475,6 +482,18 @@ def _build_indicators(
     return pd.concat([X, _entry_scalars(df, entry_pos, spread_pip)], axis=1)
 
 
+def _build_fundamental(
+    df: pd.DataFrame,
+    entry_pos: np.ndarray,
+    spread_pip: np.ndarray,
+) -> pd.DataFrame:
+    """Extract pre-computed ``fund_*`` columns at entry positions."""
+    fund_cols = [c for c in df.columns if c.startswith("fund_")]
+    X = df.iloc[entry_pos][fund_cols].copy()
+    X.index = np.arange(len(entry_pos))
+    return pd.concat([X, _entry_scalars(df, entry_pos, spread_pip)], axis=1)
+
+
 def build_feature_matrix(
     df: pd.DataFrame,
     entry_pos: np.ndarray,
@@ -487,6 +506,8 @@ def build_feature_matrix(
     ``feature_set`` selects the backend:
       "situational"  — situ_ volatility / momentum / microstructure features
       "indicators"   — SMA, MinMax, Stochastic, session-time one-hot features
+      "fundamental"  — fund_* rate-differential / economic-event features
+      "all"          — concatenation of all three backends
 
     All variants append: spread_pip, entry_hour_utc, entry_dow, entry_month.
     Features are computed on the full dataframe (no look-ahead) and sliced at
@@ -496,6 +517,16 @@ def build_feature_matrix(
         return _build_situational(df, entry_pos, spread_pip).astype(np.float32)
     elif feature_set == "indicators":
         return _build_indicators(df, entry_pos, spread_pip).astype(np.float32)
+    elif feature_set == "fundamental":
+        return _build_fundamental(df, entry_pos, spread_pip).astype(np.float32)
+    elif feature_set == "all":
+        situ = _build_situational(df, entry_pos, spread_pip)
+        indi = _build_indicators(df, entry_pos, spread_pip)
+        fund = _build_fundamental(df, entry_pos, spread_pip)
+        # Drop duplicate/spread columns (spread_pip appears in all three)
+        combined = pd.concat([situ, indi, fund], axis=1)
+        # Deduplicate columns with the same name
+        return combined.loc[:, ~combined.columns.duplicated()].astype(np.float32)
     else:
         raise ValueError(f"Unknown feature_set: {feature_set!r}")
 

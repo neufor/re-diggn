@@ -58,7 +58,14 @@
       "Bash(Where-Object*)",
       "Bash(npx *)",
       "Bash(node *)",
-      "Bash(jq *)"
+      "Bash(jq *)",
+      "WebFetch(domain:alpari.com)",
+      "WebFetch(domain:www.macrotrends.net)",
+      "WebFetch(domain:www.fedprimerate.com)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:www.ecb.europa.eu)",
+      "PowerShell(git checkout HEAD -- data/processed/eurusd_m1.parquet)",
+      "PowerShell(uv run python scripts/clean_eurusd_m1.py)"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -68,6 +75,6 @@
       "Bash(Remove-Item*-Recurse*-Force*)"
     ]
   },
-  "enableAllProjectMcpServers": true,
-  "model": "claude-sonnet-4-6"
+  "model": "claude-sonnet-4-6",
+  "enableAllProjectMcpServers": true
 }

@@ -19,8 +19,10 @@ Example: "Use the data-analyst agent to profile `data/raw/eurusd_m5.parquet`"
 ## Project structure
 ```
 data/
-  raw/          # source FX data (MT5 CSV exports), never modified
-  processed/    # cleaned parquet files (eurusd_m1.parquet)
+  raw/               # source FX data (MT5 CSV exports), never modified
+  processed/
+    eurusd_m1.parquet    # cleaned M1 OHLCV bars + swap_long/swap_short
+    swap_history_eurusd.csv   # reconstructed daily swap rates (CSV)
 models/
   session_baseline/   # SL/TP optimisation results (Optuna)
     metrics.json
@@ -35,7 +37,8 @@ notebooks/
   exploration/  # scratch EDA notebooks (not version-controlled)
   reports/      # clean, reproducible notebooks
 scripts/
-  clean_eurusd_m1.py  # MT5 CSV → parquet preprocessing script
+  clean_eurusd_m1.py           # MT5 CSV → parquet preprocessing script
+  reconstruct_swap_history.py  # reconstruct daily swap rates + merge into parquet
 src/
   features/           # feature engineering package (production)
     __init__.py       # re-exports: generate_indicators, generate_situational_features,
@@ -56,6 +59,26 @@ reports/
   tearsheet_*.md
 tests/
 ```
+
+## Datasets
+
+### EURUSD M1 OHLCV (`data/processed/eurusd_m1.parquet`)
+- **Source**: MT5 export CSV files from Alpari broker (`data/raw/EURUSD_i_M1_*.csv`, tab-separated)
+- **Columns**: open, high, low, close, tick_volume, volume, spread, **swap_long, swap_short**
+- **Rows**: ~9M (2000-01-03 — 2025-05-23, M1 bars, UTC)
+- **Generation**: `scripts/clean_eurusd_m1.py` — concatenates CSV files, parses timestamps, drops duplicates, removes weekend bars, validates OHLC integrity, writes snappy-compressed Parquet
+- **Note**: `volume=0` before ~2015 (MT5 FX limitation for that era); `volume>0` after
+
+### Swap history (`data/processed/swap_history_eurusd.csv`)
+- **Method**: Reconstructed from ECB Deposit Facility Rate + Fed Funds Effective Rate histories (hardcoded from ecb.europa.eu and Wikipedia FOMC tables)
+- **Model**: Proportional pass-through: swap_long = raw_diff × 0.2306, swap_short = -raw_diff × 0.1055
+  - `raw_diff = (eur_rate - usd_rate) × CONTRACT / 100 / 360 / TICK_VALUE`
+  - Pass-through factors calibrated to current Alpari EURUSD swap rates (long=-0.1041, short=+0.0476 as of 2026-06-06)
+  - Long and short always opposite signs (guaranteed by model design)
+- **Range**: 1999-01-01 — 2026-06-06 (10,019 daily rows)
+- **Alpari swap formula**: SWAP = Contract × (InterestRateDiff + Markup) / 100 × Price / DaysPerYear (360-day year)
+- **Limitations**: Alpari may use EURIBOR/SOFR rather than ECB/Fed reference rates; pass-through may not be perfectly linear across all rate environments
+- **Merged into parquet**: `reconstruct_swap_history.py` joins by date via `merge_swap_to_parquet()`, writing back in-place. Each M1 bar within a day shares the same swap values.
 
 ## MCP servers available
 - **filesystem** — read/write project files

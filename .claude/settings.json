@@ -65,7 +65,8 @@
       "WebFetch(domain:en.wikipedia.org)",
       "WebFetch(domain:www.ecb.europa.eu)",
       "PowerShell(git checkout HEAD -- data/processed/eurusd_m1.parquet)",
-      "PowerShell(uv run python scripts/clean_eurusd_m1.py)"
+      "PowerShell(uv run python scripts/clean_eurusd_m1.py)",
+      "PowerShell(cd c:\\\\Projects\\\\My\\\\Re-Diggn; $env:PYTHONPATH=\".\"; uv run python src/pipelines/compute_oracle_targets.py)"
     ],
     "deny": [
       "Bash(git push --force*)",

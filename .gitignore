@@ -17,7 +17,6 @@ build/
 
 # Jupyter
 .ipynb_checkpoints/
-notebooks/exploration/
 
 # Data & models (tracked by DVC)
 data/raw/

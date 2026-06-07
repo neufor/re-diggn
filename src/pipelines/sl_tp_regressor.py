@@ -62,8 +62,8 @@ MAX_BARS      = 480
 MT5_POINT        = 0.00001
 PIP              = 0.0001
 
-SL_MIN, SL_MAX = 10, 30
-TP_MIN, TP_MAX = 4, 16
+SL_MIN, SL_MAX = 5, 40
+TP_MIN, TP_MAX = 5, 40
 
 FEATURE_LOOKBACK  = 120   # bars of pre-entry history used by situ_ features
 N_CV_SPLITS       = 5
@@ -559,9 +559,9 @@ def make_lgbm_objective(
     """
     def objective(trial: optuna.Trial) -> float:
         params: dict = {
-            "n_estimators":      trial.suggest_int("n_estimators", 100, 800),
+            "n_estimators":      trial.suggest_int("n_estimators", 500, 1500),
             "learning_rate":     trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            "max_depth":         trial.suggest_int("max_depth", 3, 9),
+            "max_depth":         trial.suggest_int("max_depth", 3, 6),
             "num_leaves":        trial.suggest_int("num_leaves", 15, 127),
             "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
             "subsample":         trial.suggest_float("subsample", 0.5, 1.0),

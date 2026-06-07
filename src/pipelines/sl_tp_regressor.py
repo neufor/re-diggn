@@ -92,9 +92,9 @@ def load_m1() -> pd.DataFrame:
     if "timestamp" in df.columns:
         df = df.set_index("timestamp")
     df.index = pd.to_datetime(df.index, utc=False)
-    if df.index.tzinfo is None:
-        df.index = df.index.tz_localize("Etc/GMT-3")
-    df.index = df.index.tz_convert("UTC")
+    if df.index.tzinfo is None: # pyright: ignore[reportAttributeAccessIssue]
+        df.index = df.index.tz_localize("Etc/GMT-3") # pyright: ignore[reportAttributeAccessIssue]
+    df.index = df.index.tz_convert("UTC") # pyright: ignore[reportAttributeAccessIssue]
     df = df.sort_index().loc["2005":"2025"]
     return df
 
@@ -320,7 +320,7 @@ def find_optimal_sl_tp(
 
         chunks: list[tuple[np.ndarray, np.ndarray, np.ndarray]] = Parallel(
             n_jobs=-1, prefer="threads"
-        )(delayed(_run)(s) for s in starts)
+        )(delayed(_run)(s) for s in starts) # pyright: ignore[reportAssignmentType]
 
     for i, (sl_arr, tp_arr, pnl_arr) in enumerate(chunks):
         s = starts[i]
@@ -432,7 +432,7 @@ def _build_situational(
 ) -> pd.DataFrame:
     df_feat = df.copy()
     if "datetime" not in df_feat.columns:
-        df_feat["datetime"] = df_feat.index.tz_convert(None)
+        df_feat["datetime"] = df_feat.index.tz_convert(None)  # pyright: ignore[reportAttributeAccessIssue]
 
     print("  [situational] computing situ_ features on full dataframe...")
     df_feat = generate_situational_features(
@@ -460,7 +460,7 @@ def _build_indicators(
 ) -> pd.DataFrame:
     df_feat = df.copy()
     if "datetime" not in df_feat.columns:
-        df_feat["datetime"] = df_feat.index.tz_convert(None)
+        df_feat["datetime"] = df_feat.index.tz_convert(None) # pyright: ignore[reportAttributeAccessIssue]
 
     print("  [indicators] computing SMA/MinMax/Stoch features on full dataframe...")
     df_feat = generate_indicators(
@@ -583,8 +583,8 @@ def make_lgbm_objective(
             m_sl.fit(X_tr[tr_idx], y_sl_tr[tr_idx])
             m_tp.fit(X_tr[tr_idx], y_tp_tr[tr_idx])
 
-            pred_sl = _clip_predictions(m_sl.predict(X_tr[vi_idx]), SL_MIN, SL_MAX)
-            pred_tp = _clip_predictions(m_tp.predict(X_tr[vi_idx]), TP_MIN, TP_MAX)
+            pred_sl = _clip_predictions(m_sl.predict(X_tr[vi_idx]), SL_MIN, SL_MAX) # pyright: ignore[reportArgumentType]
+            pred_tp = _clip_predictions(m_tp.predict(X_tr[vi_idx]), TP_MIN, TP_MAX) # pyright: ignore[reportArgumentType]
 
             pnl = simulate_per_trade(
                 H_tr[vi_idx], L_tr[vi_idx], C_tr[vi_idx],
@@ -653,8 +653,8 @@ def main() -> None:
     split   = int(len(pos) * (1.0 - TEST_FRAC))
     tr_pos  = pos[:split]
     te_pos  = pos[split:]
-    tr_dates = f"{df.index[tr_pos[0]].date()} → {df.index[tr_pos[-1]].date()}"
-    te_dates = f"{df.index[te_pos[0]].date()} → {df.index[te_pos[-1]].date()}"
+    tr_dates = f"{df.index[tr_pos[0]].date()} → {df.index[tr_pos[-1]].date()}" # pyright: ignore[reportAttributeAccessIssue]
+    te_dates = f"{df.index[te_pos[0]].date()} → {df.index[te_pos[-1]].date()}" # pyright: ignore[reportAttributeAccessIssue]
     print(f"  Train: {len(tr_pos):,}  ({tr_dates})")
     print(f"  Test : {len(te_pos):,}   ({te_dates})")
 
@@ -743,10 +743,10 @@ def main() -> None:
     model_tp.fit(X_tr, y_tp_tr)
 
     # Predictions on train + test
-    pred_sl_tr = _clip_predictions(model_sl.predict(X_tr), SL_MIN, SL_MAX)
-    pred_tp_tr = _clip_predictions(model_tp.predict(X_tr), TP_MIN, TP_MAX)
-    pred_sl_te = _clip_predictions(model_sl.predict(X_te), SL_MIN, SL_MAX)
-    pred_tp_te = _clip_predictions(model_tp.predict(X_te), TP_MIN, TP_MAX)
+    pred_sl_tr = _clip_predictions(model_sl.predict(X_tr), SL_MIN, SL_MAX) # pyright: ignore[reportArgumentType]
+    pred_tp_tr = _clip_predictions(model_tp.predict(X_tr), TP_MIN, TP_MAX) # pyright: ignore[reportArgumentType]
+    pred_sl_te = _clip_predictions(model_sl.predict(X_te), SL_MIN, SL_MAX) # pyright: ignore[reportArgumentType]
+    pred_tp_te = _clip_predictions(model_tp.predict(X_te), TP_MIN, TP_MAX) # pyright: ignore[reportArgumentType]
 
     # Simulate with predicted SL/TP
     pnl_tr = simulate_per_trade(H_tr, L_tr, C_tr, E_tr, SP_tr, pred_sl_tr, pred_tp_tr)
